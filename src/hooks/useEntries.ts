@@ -189,16 +189,43 @@ export function useUpdateGroupedEntries() {
   return useMutation({
     mutationFn: async ({ groupId, data }: { groupId: string, data: Partial<InsertEntry> }) => {
       // On retire date et id pour éviter d'écraser ces valeurs
-      const { id, date, ...updateData } = data;
+      const { id, date, google_photos_ids, ...updateData } = data;
       
-      const { data: updatedData, error } = await supabase
+      // On met à jour tous les textes et l'humeur sur l'ensemble du groupe
+      const { error: errorUpdateAll } = await supabase
         .from("entries")
         .update(updateData)
-        .eq("group_id", groupId)
-        .select();
+        .eq("group_id", groupId);
 
-      if (error) throw error;
-      return updatedData;
+      if (errorUpdateAll) throw errorUpdateAll;
+
+      // Si des photos sont fournies, on ne les associe qu'au premier jour chronologique du groupe
+      if (google_photos_ids !== undefined) {
+        // D'abord, on supprime les photos de toutes les entrées du groupe (pour éviter les doublons accidentels)
+        await supabase
+          .from("entries")
+          .update({ google_photos_ids: [] })
+          .eq("group_id", groupId);
+
+        // Puis on récupère l'entrée la plus ancienne du groupe
+        const { data: oldestEntry } = await supabase
+          .from("entries")
+          .select("id")
+          .eq("group_id", groupId)
+          .order("date", { ascending: true })
+          .limit(1)
+          .single();
+
+        if (oldestEntry) {
+          // On ajoute les photos uniquement sur cette première entrée
+          await supabase
+            .from("entries")
+            .update({ google_photos_ids })
+            .eq("id", oldestEntry.id);
+        }
+      }
+
+      return null;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["entries"] });

@@ -85,10 +85,15 @@ export default function Entry() {
           return;
         }
 
-        const entriesPayload = newDates.map(d => ({
+        // Trier les dates chronologiquement pour s'assurer que le premier jour est bien identifié
+        const sortedDates = [...newDates].sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+        const entriesPayload = sortedDates.map((d, index) => ({
           ...payload,
           date: d,
-          group_id: groupId
+          group_id: groupId,
+          // Uniquement pour le premier jour du bloc, on associe les photos pour éviter les doublons
+          google_photos_ids: index === 0 ? payload.google_photos_ids : []
         }));
 
         await createGroupedEntries.mutateAsync(entriesPayload);
