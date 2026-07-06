@@ -108,7 +108,7 @@ export default function Index() {
                   onClick={() => setIsMultiSelectMode(!isMultiSelectMode)}
                   className={`px-4 py-2 font-bold uppercase rounded-xl border-2 transition-all ${isMultiSelectMode ? 'bg-orange-500 text-white border-orange-600 shadow-brutal-sm' : 'bg-white text-black border-black/10 hover:border-black/20'}`}
                 >
-                  {isMultiSelectMode ? "Mode Bloc Activé" : "Créer un Bloc"}
+                  {isMultiSelectMode ? "Mode Bloc Activé" : "Mode Bloc"}
                 </button>
                 {isMultiSelectMode && selectionStart && selectionEnd && (
                   <span className="font-bold text-sm bg-white px-3 py-1 rounded-lg border border-black/10">
