@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { format, addMonths, subMonths } from "date-fns";
+import { format, addMonths, subMonths, isBefore, isAfter, differenceInDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Navigation } from "@/components/layout/Navigation";
 import { PageTransition } from "@/components/layout/PageTransition";
@@ -17,15 +17,52 @@ export default function Index() {
   const { data: entries = [], isLoading } = useEntries(); 
   const navigate = useNavigate();
 
+  // Mode de sélection multiple
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  const [selectionStart, setSelectionStart] = useState<Date | null>(null);
+  const [selectionEnd, setSelectionEnd] = useState<Date | null>(null);
+
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   const isFuture = addMonths(currentDate, 1) > new Date();
 
   const handleDayClick = (date: Date, entry?: { id: string }) => {
+    if (isMultiSelectMode) {
+      if (!selectionStart) {
+        setSelectionStart(date);
+        setSelectionEnd(null);
+      } else if (!selectionEnd) {
+        if (isBefore(date, selectionStart)) {
+          setSelectionEnd(selectionStart);
+          setSelectionStart(date);
+        } else {
+          setSelectionEnd(date);
+        }
+      } else {
+        setSelectionStart(date);
+        setSelectionEnd(null);
+      }
+      return;
+    }
+
     if (entry) {
       navigate(`/entry/${entry.id}`);
     } else {
       navigate(`/entry?date=${format(date, "yyyy-MM-dd")}`);
+    }
+  };
+
+  const handleCancelSelection = () => {
+    setSelectionStart(null);
+    setSelectionEnd(null);
+    setIsMultiSelectMode(false);
+  };
+
+  const handleCreateBlock = () => {
+    if (selectionStart && selectionEnd) {
+      navigate(`/entry?startDate=${format(selectionStart, "yyyy-MM-dd")}&endDate=${format(selectionEnd, "yyyy-MM-dd")}`);
+    } else if (selectionStart) {
+      navigate(`/entry?date=${format(selectionStart, "yyyy-MM-dd")}`);
     }
   };
 
@@ -64,13 +101,53 @@ export default function Index() {
               </Button>
             </div>
 
+            {/* Barre de sélection multiple */}
+            <div className="mb-4 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-white/40 rounded-xl border-2 border-black/5 shadow-sm">
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => setIsMultiSelectMode(!isMultiSelectMode)}
+                  className={`px-4 py-2 font-bold uppercase rounded-xl border-2 transition-all ${isMultiSelectMode ? 'bg-orange-500 text-white border-orange-600 shadow-brutal-sm' : 'bg-white text-black border-black/10 hover:border-black/20'}`}
+                >
+                  {isMultiSelectMode ? "Mode Bloc Activé" : "Créer un Bloc"}
+                </button>
+                {isMultiSelectMode && selectionStart && selectionEnd && (
+                  <span className="font-bold text-sm bg-white px-3 py-1 rounded-lg border border-black/10">
+                    Du {format(selectionStart, "dd/MM")} au {format(selectionEnd, "dd/MM")} 
+                    <span className="ml-2 text-orange-500">({differenceInDays(selectionEnd, selectionStart) + 1}j)</span>
+                  </span>
+                )}
+              </div>
+              
+              {isMultiSelectMode && (
+                <div className="flex gap-2">
+                  <button 
+                    onClick={handleCancelSelection}
+                    className="px-4 py-2 font-bold text-sm bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors"
+                  >
+                    Annuler
+                  </button>
+                  {selectionStart && selectionEnd && (
+                    <button 
+                      onClick={handleCreateBlock}
+                      className="px-4 py-2 font-bold text-sm bg-black text-white rounded-xl hover:bg-gray-800 transition-colors shadow-brutal-sm"
+                    >
+                      Valider le bloc
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
             {isLoading ? (
               <div className="h-64 flex items-center justify-center text-muted-foreground">Chargement...</div>
             ) : (
               <PixelGrid 
                 entries={entries} 
                 currentDate={currentDate} 
-                onDayClick={handleDayClick} 
+                onDayClick={handleDayClick}
+                selectionStart={selectionStart}
+                selectionEnd={selectionEnd}
+                isMultiSelectMode={isMultiSelectMode}
               />
             )}
             

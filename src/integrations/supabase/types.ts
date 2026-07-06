@@ -18,6 +18,7 @@ export interface Database {
           mood_score: number | null
           hashtags: string[] | null
           google_photos_ids: string[] | null // NOUVEAU
+          group_id: string | null
         }
         Insert: {
           id?: string
@@ -27,6 +28,7 @@ export interface Database {
           mood_score?: number | null
           hashtags?: string[] | null
           google_photos_ids?: string[] | null // NOUVEAU
+          group_id?: string | null
         }
         Update: {
           id?: string
@@ -36,6 +38,7 @@ export interface Database {
           mood_score?: number | null
           hashtags?: string[] | null
           google_photos_ids?: string[] | null // NOUVEAU
+          group_id?: string | null
         }
       }
       profiles: {

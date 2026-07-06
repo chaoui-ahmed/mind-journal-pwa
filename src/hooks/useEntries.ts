@@ -142,3 +142,105 @@ export function useDeleteEntry() {
     },
   });
 }
+
+// ✅ NOUVEAU HOOK : Création multiple
+export function useCreateGroupedEntries() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (entriesData: InsertEntry[]) => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error("Non connecté");
+
+      const entriesToCreate = entriesData.map(entry => ({
+        ...entry,
+        user_id: userData.user.id
+      }));
+
+      const { data, error } = await supabase
+        .from("entries")
+        .upsert(entriesToCreate, { onConflict: 'user_id, date' })
+        .select();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entries"] });
+      toast({ title: "Succès", description: "Bloc de pixels enregistré !" });
+    },
+    onError: (error: any) => {
+      console.error("Erreur create multiple:", error);
+      toast({ 
+        title: "Erreur", 
+        description: error.message || "Impossible de créer le bloc.", 
+        variant: "destructive" 
+      });
+    },
+  });
+}
+
+// ✅ NOUVEAU HOOK : Mise à jour de groupe
+export function useUpdateGroupedEntries() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ groupId, data }: { groupId: string, data: Partial<InsertEntry> }) => {
+      // On retire date et id pour éviter d'écraser ces valeurs
+      const { id, date, ...updateData } = data;
+      
+      const { data: updatedData, error } = await supabase
+        .from("entries")
+        .update(updateData)
+        .eq("group_id", groupId)
+        .select();
+
+      if (error) throw error;
+      return updatedData;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entries"] });
+      queryClient.invalidateQueries({ queryKey: ["entry"] });
+      toast({ title: "Succès", description: "Bloc modifié !" });
+    },
+    onError: (error: any) => {
+      console.error("Erreur update multiple:", error);
+      toast({ 
+        title: "Erreur", 
+        description: error.message || "Impossible de modifier le bloc.", 
+        variant: "destructive" 
+      });
+    },
+  });
+}
+
+// ✅ NOUVEAU HOOK : Suppression de groupe
+export function useDeleteGroupedEntries() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (groupId: string) => {
+      const { error } = await supabase
+        .from("entries")
+        .delete()
+        .eq("group_id", groupId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entries"] });
+      toast({ title: "Supprimé", description: "Le bloc entier a été effacé." });
+    },
+    onError: (error: any) => {
+      console.error("Erreur delete multiple:", error);
+      toast({ 
+        title: "Erreur", 
+        description: error.message || "Impossible de supprimer le bloc.", 
+        variant: "destructive" 
+      });
+    },
+  });
+}

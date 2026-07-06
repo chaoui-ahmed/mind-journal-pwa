@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Sparkles, X, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Save, Sparkles, X, Image as ImageIcon, Trash2, Layers } from "lucide-react";
 import { Navigation } from "@/components/layout/Navigation";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { MoodSelector } from "@/components/journal/MoodSelector";
 import { HashtagInput } from "@/components/journal/HashtagInput";
-import { useEntry, useCreateEntry, useUpdateEntry } from "@/hooks/useEntries";
+import { useEntry, useCreateEntry, useUpdateEntry, useCreateGroupedEntries, useUpdateGroupedEntries, useDeleteEntry, useDeleteGroupedEntries, useEntries } from "@/hooks/useEntries";
+import { eachDayOfInterval, format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { GooglePhotoPicker } from "@/components/journal/GooglePhotoPicker";
 
@@ -18,6 +19,11 @@ export default function Entry() {
   const { data: existingEntry, isLoading } = useEntry(id);
   const createEntry = useCreateEntry();
   const updateEntry = useUpdateEntry();
+  const createGroupedEntries = useCreateGroupedEntries();
+  const updateGroupedEntries = useUpdateGroupedEntries();
+  const deleteEntry = useDeleteEntry();
+  const deleteGroupedEntries = useDeleteGroupedEntries();
+  const { data: allEntries = [] } = useEntries();
 
   const [content, setContent] = useState("");
   const [moodScore, setMoodScore] = useState(3);
@@ -27,7 +33,11 @@ export default function Entry() {
   const [showSpecialPopup, setShowSpecialPopup] = useState(false);
 
   const urlDate = searchParams.get("date");
+  const startDate = searchParams.get("startDate");
+  const endDate = searchParams.get("endDate");
+  
   const [date, setDate] = useState(urlDate || new Date().toISOString().split('T')[0]);
+  const [updateMode, setUpdateMode] = useState<"single" | "group">("single");
 
   useEffect(() => {
     if (existingEntry) {
@@ -61,8 +71,40 @@ export default function Entry() {
     };
 
     try {
-      if (id && id !== "new") {
-        await updateEntry.mutateAsync({ id, ...payload });
+      if (startDate && endDate) {
+        // Mode création de bloc
+        const dates = eachDayOfInterval({ start: new Date(startDate), end: new Date(endDate) });
+        const groupId = crypto.randomUUID();
+        
+        // Exclure les dates qui ont déjà une entrée
+        const existingDates = new Set(allEntries.map(e => e.date));
+        const newDates = dates.map(d => format(d, "yyyy-MM-dd")).filter(d => !existingDates.has(d));
+        
+        if (newDates.length === 0) {
+          toast({ title: "Aucune action", description: "Toutes les dates de cette période ont déjà un pixel." });
+          return;
+        }
+
+        const entriesPayload = newDates.map(d => ({
+          ...payload,
+          date: d,
+          group_id: groupId
+        }));
+
+        await createGroupedEntries.mutateAsync(entriesPayload);
+      } else if (id && id !== "new") {
+        if (existingEntry?.group_id && updateMode === "group") {
+          await updateGroupedEntries.mutateAsync({ 
+            groupId: existingEntry.group_id, 
+            data: payload 
+          });
+        } else {
+          // Si c'était dans un groupe mais qu'on modifie en single, on le détache du groupe
+          const finalPayload = existingEntry?.group_id && updateMode === "single" 
+            ? { ...payload, group_id: null } 
+            : payload;
+          await updateEntry.mutateAsync({ id, ...finalPayload });
+        }
       } else {
         await createEntry.mutateAsync(payload);
       }
@@ -70,11 +112,27 @@ export default function Entry() {
       if (moodScore === 1) {
         setShowSpecialPopup(true);
       } else {
-        toast({ title: "Succès", description: "Pixel enregistré !" });
+        toast({ title: "Succès", description: startDate && endDate ? "Bloc enregistré !" : "Pixel enregistré !" });
         navigate("/");
       }
     } catch (error: any) {
       toast({ title: "Erreur", description: error.message || "Erreur de sauvegarde", variant: "destructive" });
+    }
+  };
+
+  const handleDelete = async (deleteMode: "single" | "group") => {
+    if (!id || id === "new") return;
+    if (confirm("Voulez-vous vraiment supprimer ce pixel ?")) {
+      try {
+        if (deleteMode === "group" && existingEntry?.group_id) {
+          await deleteGroupedEntries.mutateAsync(existingEntry.group_id);
+        } else {
+          await deleteEntry.mutateAsync(id);
+        }
+        navigate("/");
+      } catch (error: any) {
+        toast({ title: "Erreur", description: error.message || "Erreur lors de la suppression", variant: "destructive" });
+      }
     }
   };
 
@@ -113,8 +171,35 @@ export default function Entry() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="text-center">
-              <span className="inline-block px-4 py-1 border-2 border-black font-black shadow-brutal-sm bg-white uppercase transform -rotate-1">📅 {date}</span>
+              {startDate && endDate ? (
+                <span className="inline-block px-4 py-1 border-2 border-black font-black shadow-brutal-sm bg-white uppercase transform -rotate-1">
+                  📅 Du {format(new Date(startDate), "dd/MM/yyyy")} au {format(new Date(endDate), "dd/MM/yyyy")}
+                </span>
+              ) : (
+                <span className="inline-block px-4 py-1 border-2 border-black font-black shadow-brutal-sm bg-white uppercase transform -rotate-1">
+                  📅 {date}
+                </span>
+              )}
             </div>
+
+            {existingEntry?.group_id && (
+              <div className="card-brutal p-4 bg-orange-100 flex items-start gap-3">
+                <Layers className="w-5 h-5 text-orange-500 mt-1" />
+                <div>
+                  <p className="font-black text-sm uppercase mb-2">Cette entrée appartient à un bloc.</p>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm font-bold">
+                      <input type="radio" checked={updateMode === "single"} onChange={() => setUpdateMode("single")} className="accent-black w-4 h-4" />
+                        Modifier uniquement ce jour
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-sm font-bold">
+                      <input type="radio" checked={updateMode === "group"} onChange={() => setUpdateMode("group")} className="accent-black w-4 h-4" />
+                        Appliquer au bloc entier
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="card-brutal p-6 bg-white">
               <MoodSelector value={moodScore} onChange={setMoodScore} />
@@ -151,10 +236,18 @@ export default function Entry() {
               <HashtagInput value={hashtags} onChange={setHashtags} />
             </div>
 
-            <button type="submit" disabled={createEntry.isPending || updateEntry.isPending} className="btn-brutal w-full py-6 text-xl font-black bg-black text-white hover:bg-gray-900 flex items-center justify-center gap-2 disabled:opacity-70">
-              <Save className="w-5 h-5" />
-              {createEntry.isPending || updateEntry.isPending ? "SAUVEGARDE..." : "ENREGISTRER MON PIXEL"}
-            </button>
+            <div className="flex gap-4">
+              <button type="submit" disabled={createEntry.isPending || updateEntry.isPending || createGroupedEntries.isPending} className="btn-brutal flex-1 py-4 text-lg font-black bg-black text-white hover:bg-gray-900 flex items-center justify-center gap-2 disabled:opacity-70">
+                <Save className="w-5 h-5" />
+                SAUVEGARDER
+              </button>
+
+              {id && id !== "new" && (
+                <button type="button" onClick={() => handleDelete(updateMode)} className="btn-brutal p-4 bg-red-500 text-white hover:bg-red-600 flex items-center justify-center">
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              )}
+            </div>
           </form>
         </main>
       </PageTransition>
