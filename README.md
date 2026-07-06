@@ -1,73 +1,65 @@
-# Welcome to your Lovable project
+# 📓 Mind Journal (Mood Tracker)
 
-## Project info
+[![Live Demo](https://img.shields.io/badge/Live_Demo-▶-green?style=for-the-badge)](https://remix-of-mood-journal.vercel.app)
+[![React](https://img.shields.io/badge/React-18.3-blue.svg?style=flat-square&logo=react&logoColor=white)]()
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg?style=flat-square&logo=typescript&logoColor=white)]()
+[![Supabase](https://img.shields.io/badge/Database-Supabase-3ECF8E.svg?style=flat-square&logo=supabase&logoColor=white)]()
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC.svg?style=flat-square&logo=tailwind-css&logoColor=white)]()
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Mind Journal is a highly interactive, feature-rich journaling and mood tracking progressive web application (PWA). It provides a secure, private canvas for users to document their mental wellness, log emotions, and analyze long-term sentiment trends through data-driven charts.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## ⚡ Features
 
-**Use Lovable**
+- **Mood Logging & Journaling**: Create, edit, and delete detailed daily journal entries paired with physical mood levels.
+- **Sentiment & Mood Trends**: Interactive charts showing emotional fluctuation over time to discover mental wellness patterns.
+- **Media Gallery**: Embed and preview photos directly attached to your journal logs, securely hosted on Supabase Storage.
+- **Dynamic Theming**: Advanced visual configurations including custom wallpapers, dynamic animations (shooting stars, birthday events), and responsive dark/light modes.
+- **Secure Supabase Backend**: Integrated user logins, real-time database syncing, and secure session management.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠️ Tech Stack
 
-**Use your preferred IDE**
+- **Frontend**: React (Vite, TypeScript, React Router DOM)
+- **Data & APIs**: TanStack React Query, Lucide Icons, Recharts (for trend plotting)
+- **UI & Transitions**: Shadcn UI, Radix UI primitives, Framer Motion
+- **Backend**: Supabase (PostgreSQL Database, Auth, Storage)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+---
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🚀 Getting Started
 
-Follow these steps:
+### Prerequisites
+Make sure you have Node.js 18+ and `npm` installed.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Installation
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/chaoui-ahmed/remix-of-mood-journal.git
+   cd remix-of-mood-journal
+   ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+3. **Configure Environment Variables**:
+   Create a `.env` file in the root directory:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
-**Edit a file directly in GitHub**
+4. **Run development mode**:
+   ```bash
+   npm run dev
+   ```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## ✍️ Author
+- **Ahmed Chaoui** — Engineering Student at Eurecom
