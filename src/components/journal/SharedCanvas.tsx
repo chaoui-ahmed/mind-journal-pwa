@@ -36,7 +36,9 @@ export function SharedCanvas() {
 
     ctx.beginPath();
     const rect = canvas.getBoundingClientRect();
-    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    ctx.moveTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
     setIsDrawing(true);
     setHasDrawn(true);
   };
@@ -48,7 +50,9 @@ export function SharedCanvas() {
     if (!canvas || !ctx) return;
 
     const rect = canvas.getBoundingClientRect();
-    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    ctx.lineTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
     ctx.strokeStyle = "black";
     ctx.lineWidth = 3;
     ctx.lineCap = "round";
