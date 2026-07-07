@@ -41,6 +41,26 @@ export interface Database {
           group_id?: string | null
         }
       }
+      shared_canvas: {
+        Row: {
+          id: string
+          user_id: string
+          drawing_data: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          drawing_data: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          drawing_data?: string
+          created_at?: string
+        }
+      }
       profiles: {
         Row: {
           id: string

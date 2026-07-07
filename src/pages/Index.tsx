@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { format, addMonths, subMonths, isBefore, isAfter, differenceInDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Navigation } from "@/components/layout/Navigation";
 import { PageTransition } from "@/components/layout/PageTransition";
-import { PixelGrid } from "@/components/journal/PixelGrid"; 
+import { PixelGrid } from "@/components/journal/PixelGrid";
+import { SharedCanvas } from "@/components/journal/SharedCanvas"; 
 import { EntryCard } from "@/components/journal/EntryCard";
 import { useEntries } from "@/hooks/useEntries";
 import { Button } from "@/components/ui/button";
@@ -81,8 +82,8 @@ export default function Index() {
             <h1 className="text-4xl font-extrabold text-orange-500 mb-2">
               Mes Pixels ✨
             </h1>
-            <div className="text-muted-foreground font-medium italic mb-8">
-               ✨✨✨✨✨ <p className="text-muted-foreground mb-8">22 !!!! j'espere qu'on passera notre vie a 2 💕</p>
+            <div className="mb-10 w-full flex justify-center md:justify-start">
+              <SharedCanvas />
             </div>
           </div>
           
